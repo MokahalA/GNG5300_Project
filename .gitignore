@@ -14,16 +14,9 @@ venv/
 env/
 .venv/
 
-# Static and media files
-staticfiles/
-media/
-
 # IDE configurations
 .vscode/
 .idea/
 
 # macOS files
 .DS_Store
-
-# Windows files
-Thumbs.db

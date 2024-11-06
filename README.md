@@ -7,6 +7,8 @@
 
     `python3 -m venv venv`
 
+    Note: Make sure you have Python 3.10+
+
 2. Always remember to activate the virtual environment & set your VSCode interpreter to the correct path.
 
     Windows: `venv\Scripts\activate`
@@ -22,7 +24,7 @@
 
 ## Instructions to run the app
 
-1. Run the database migrations to set up your SQLite
+1. Run the database migrations to set up your SQLite files:
 
     `python manage.py migrate`
 
