@@ -44,9 +44,6 @@
       align-items: center;
     }
 
-    .sidebar .dropdown-menu {
-      background-color: #ffffff;
-    }
 
     .sidebar .dropdown-item {
       color: #212529; /* Ensure dropdown text color is consistent */
@@ -127,8 +124,7 @@
         <p>This is your home page. </p>
       </div>
       <div id="profile-content" class="tab-content" style="display: none;">
-        <h2>Profile Page</h2>
-        <p>Your profile details will go here.</p>
+        {% include 'profile.html' %}
       </div>
       <div id="recipes-content" class="tab-content" style="display: none;">
         <h2>Recipes</h2>
