@@ -1,0 +1,34 @@
+<!-- grocery_list.html -->
+
+<div class="container">
+    <h1>My Grocery List</h1>
+    <div id="grocery-list">
+        <!-- AJAX will populate this -->
+    </div>
+</div>
+        
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadGroceryList();
+    });
+
+    function loadGroceryList() {
+        fetch('grocery-list/', {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const groceryList = document.getElementById('grocery-list');
+            groceryList.innerHTML = data.groceries.map(item => `
+                <div class="grocery-item">
+                    <h3>${item.name}</h3>
+                    <p>Quantity: ${item.quantity} ${item.unit}</p>
+                    ${item.expiration_date ? 
+                        `<p>Expires: ${item.expiration_date}</p>` : ''}
+                </div>
+            `).join('');
+        });
+    }
+</script>

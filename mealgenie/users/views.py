@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from .models import UserProfile
+from .models import UserProfile, UserGrocery, Grocery, GroceryCategory
 from django.http import JsonResponse
 import json
 
@@ -55,22 +55,6 @@ def home_view(request, username):
         'allergies': profile.allergies
     }
     return render(request, 'home.html', context)
-
-@login_required
-def home_view(request, username):
-    user = User.objects.get(username=username)
-    try:
-        profile = user.userprofile
-    except UserProfile.DoesNotExist:
-        profile = UserProfile.objects.create(user=user)
-    context = {
-        'first_name': user.first_name,
-        'username': user.username,
-        'dietary_preferences': profile.dietary_preferences,
-        'allergies': profile.allergies
-    }
-    return render(request, 'home.html', context)
-
 
 @login_required
 def profile_view(request):
@@ -126,3 +110,22 @@ def profile_view(request):
         'allergies_json': json.dumps(allergies_list),
     }
     return render(request, 'profile.html', context)
+
+@login_required
+def my_groceries_view(request):
+    if request.method == 'GET':
+        # Get user's groceries
+        print(f"Current user: {request.user.username}")
+        user_groceries = UserGrocery.objects.filter(user=request.user).select_related('grocery')
+        
+        # Format data for JSON response
+        grocery_list = [{
+            'name': item.grocery.name,
+            'quantity': item.quantity,
+            'unit': item.grocery.unit,
+            'expiration_date': item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else None
+        } for item in user_groceries]
+        
+        return JsonResponse({'groceries': grocery_list})
+    
+    return render(request, 'grocery_list.html')
