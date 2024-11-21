@@ -1,34 +1,41 @@
 <!-- grocery_list.html -->
 
 <div class="container">
-    <h1>My Grocery List</h1>
+    <h2>My Grocery List</h2>
+
+    <!-- Add New Grocery Button -->
+    <a href="{% url 'add_grocery' %}" class="btn btn-primary mb-3">Add New Grocery</a>
+    <!-- Grocery List -->
     <div id="grocery-list">
         <!-- AJAX will populate this -->
     </div>
 </div>
         
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        loadGroceryList();
-    });
-
+document.addEventListener('DOMContentLoaded', function() {
+    
     function loadGroceryList() {
         fetch('grocery-list/', {
+            method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
         })
         .then(response => response.json())
         .then(data => {
-            const groceryList = document.getElementById('grocery-list');
-            groceryList.innerHTML = data.groceries.map(item => `
+            const list = document.getElementById('grocery-list');
+            list.innerHTML = data.groceries.map(item => `
                 <div class="grocery-item">
                     <h3>${item.name}</h3>
+                    <p>Category: ${item.category}</p>
                     <p>Quantity: ${item.quantity} ${item.unit}</p>
-                    ${item.expiration_date ? 
-                        `<p>Expires: ${item.expiration_date}</p>` : ''}
+                    ${item.expiration_date ? `<p>Expires: ${item.expiration_date}</p>` : ''}
                 </div>
             `).join('');
         });
     }
+    
+    // Load groceries on page load
+    loadGroceryList();
+});
 </script>

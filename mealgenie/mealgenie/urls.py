@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from users.views import login_view, register_view, logout_view, home_view, profile_view, my_groceries_view
+from users.views import login_view, register_view, logout_view, home_view, profile_view, grocery_list_view, add_grocery_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,5 +27,7 @@ urlpatterns = [
     path('home/<str:username>', home_view, name='home'),
     path('home/profile/', profile_view, name='profile'),
     path('logout/', logout_view, name='logout'),
-    path('home/grocery-list/', my_groceries_view, name='my-groceries'),
+    path('home/grocery-list/', grocery_list_view, name='grocery_list'),
+    # path('home/<str:username>#my-groceries', name='my_groceries'),
+    path('home/grocery-list/add', add_grocery_view, name='add_grocery'),
 ]

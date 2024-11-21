@@ -3,9 +3,11 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from .models import UserProfile, UserGrocery, Grocery, GroceryCategory
+from .models import UserProfile, UserGrocery, GroceryCategory
+from django.urls import reverse
 from django.http import JsonResponse
 import json
+from .forms import AddGroceryForm
 
 def login_view(request):
     if request.method == 'POST':
@@ -112,20 +114,33 @@ def profile_view(request):
     return render(request, 'profile.html', context)
 
 @login_required
-def my_groceries_view(request):
+def grocery_list_view(request):
     if request.method == 'GET':
-        # Get user's groceries
-        print(f"Current user: {request.user.username}")
-        user_groceries = UserGrocery.objects.filter(user=request.user).select_related('grocery')
-        
-        # Format data for JSON response
-        grocery_list = [{
-            'name': item.grocery.name,
-            'quantity': item.quantity,
-            'unit': item.grocery.unit,
-            'expiration_date': item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else None
-        } for item in user_groceries]
-        
-        return JsonResponse({'groceries': grocery_list})
-    
+        user_groceries = UserGrocery.objects.filter(user=request.user)
+
+        # Handle AJAX requests
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            grocery_list = [{
+                'name': item.grocery_name,
+                'category': item.grocery_category.category_name,
+                'quantity': item.quantity,
+                'unit': item.unit,
+                'expiration_date': item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else None
+            } for item in user_groceries]
+            return JsonResponse({'groceries': grocery_list})
     return render(request, 'grocery_list.html')
+
+@login_required
+def add_grocery_view(request):
+    if request.method == 'POST':
+        form = AddGroceryForm(request.POST)
+        if form.is_valid():
+            grocery = form.save(commit=False)
+            grocery.user = request.user
+            grocery.save()
+            return redirect(f"{reverse('home', args=[request.user.username])}#my-groceries")
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Invalid form'}, status=400)
+    if request.method == 'GET':
+        form = AddGroceryForm()
+        return render(request, 'add_grocery.html', {'form': form})

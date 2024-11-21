@@ -133,7 +133,7 @@
           </a>
         </li>
         <li class="nav-item">
-          <a href="#" class="nav-link" id="groceries-tab">
+          <a href="#my-groceries" class="nav-link" id="groceries-tab">
             <i class="fas fa-shopping-cart me-2"></i> My Groceries
           </a>
         </li>
@@ -202,8 +202,13 @@
       });
     }
 
-    // Set default tab to Home
-    showContent('home-content');
+    // Check for hash on page load
+    if (window.location.hash === '#my-groceries') {
+        showContent('groceries-content');
+    } else {
+        showContent('home-content');
+    }
+    
 
     // Add click event listeners to each tab
     tabs.forEach(tab => {
