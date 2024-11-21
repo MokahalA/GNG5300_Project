@@ -10,6 +10,13 @@ class GroceryCategoryAdmin(admin.ModelAdmin):
 
 class GroceryAdmin(admin.ModelAdmin):
     list_display = ['name', 'price', 'category', 'unit']
+    def get_category_name(self, obj):
+        return obj.category.category_name
+    get_category_name.short_description = 'Category'  # Column header in admin
+    
+    # Add search and filter capabilities
+    search_fields = ['name']
+    list_filter = ['category']
 
 class UserGroceryAdmin(admin.ModelAdmin):
     list_display = ['user', 'grocery', 'quantity', 'expiration_date']
