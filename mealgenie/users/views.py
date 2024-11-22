@@ -121,8 +121,8 @@ def grocery_list_view(request):
         # Handle AJAX requests
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             grocery_list = [{
-                'name': item.grocery_name,
-                'category': item.grocery_category.category_name,
+                'name': item.grocery_name.capitalize(),
+                'category': item.grocery_category.category_name.capitalize(),
                 'quantity': item.quantity,
                 'unit': item.unit,
                 'expiration_date': item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else None
