@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from .models import UserProfile, UserGrocery, GroceryCategory
+from .models import UserProfile, UserGrocery, GroceryCategory, MealPlans
 from django.urls import reverse
 from django.http import JsonResponse
 import json
@@ -147,34 +147,81 @@ def add_grocery_view(request):
         return render(request, 'add_grocery.html', {'form': form})
     
 
+@login_required
 def generate_meal_plans(request):
-    # Obtain user dietary preferences and allergies.
-    profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    dietary_preferences = json.loads(profile.dietary_preferences) if profile.dietary_preferences else []
-    allergies = json.loads(profile.allergies) if profile.allergies else []
+    if request.method == "POST":
+        # Obtain the user's profile to get dietary preferences and allergies
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        dietary_preferences = json.loads(profile.dietary_preferences) if profile.dietary_preferences else []
+        allergies = json.loads(profile.allergies) if profile.allergies else []
 
-    # Create the prompt for the model
-    prompt = ""
-    # If the user has no dietary preferences or allergies, then use standard prompt.
-    if(len(allergies) == 0 and len(dietary_preferences) == 0):
-        prompt = "Generate a meal plan of breakfast, lunch, dinner for 7 days. Name them using Day 1, Day 2, etc. No recipes just the names of the meals."
-    # If the user has dietary preferences or allergies, then use custom prompt.
+        # Create the prompt for the model
+        if not dietary_preferences and not allergies:
+            prompt = (
+                "Generate a meal plan of breakfast, lunch, dinner for 7 days. "
+                "Name them using Day 1, Day 2, etc. No recipes, just the names of the meals."
+            )
+        else:
+            prompt = (
+                "Generate a meal plan of breakfast, lunch, dinner for 7 days. "
+                "Name them using Day 1, Day 2, etc. No recipes, just the names of the meals. "
+                "It should be free of: "
+            )
+            prompt += ", ".join(allergies) + ". "
+            prompt += "It should be " + ", ".join(dietary_preferences) + "."
+
+        try:
+            # Call the model to generate the meal plan
+            result = prompt_ollama(prompt, model="llama3.2:3b")  # Replace `prompt_ollama` with your model function
+
+            # Save or overwrite the user's meal plan in the database
+            meal_plan_obj, _ = MealPlans.objects.get_or_create(user=request.user)
+            meal_plan_obj.meal_plan = result
+            meal_plan_obj.save()
+
+            # Return the generated meal plan as JSON
+            return JsonResponse({
+                'dietary_preferences': dietary_preferences,
+                'allergies': allergies,
+                'response': result,
+                'message': 'Meal plan successfully generated and saved!'
+            })
+
+        except Exception as e:
+            # Handle errors in meal plan generation or saving
+            return JsonResponse({
+                'error': 'An error occurred while generating the meal plan.',
+                'details': str(e)
+            }, status=500)
+    
     else:
-        prompt = "Generate a meal plan of breakfast, lunch, dinner for 7 days. Name them using Day 1, Day 2, etc. No recipes just the names of the meals. It should be free of: "
-        for allergy in allergies:
-            prompt += allergy + ". "
-        prompt += "It should be "
-        for preference in dietary_preferences:
-            prompt += preference + ". "
+        # Return an error for unsupported HTTP methods
+        return JsonResponse({'error': 'Invalid request method. Use POST instead.'}, status=405)
 
-    # Call the model to generate the meal plan.
-    result = prompt_ollama(prompt, model="llama3.2:3b")
+@login_required
+def get_meal_plan(request):
+    try:
+        meal_plan_obj = MealPlans.objects.filter(user=request.user).first()
+        if meal_plan_obj:
+            dietary_preferences = []
+            allergies = []
 
-    # Call the model to generate the meal plan & return the response.
-    if request.method == 'GET':
-        return JsonResponse({
-            'dietary_preferences': dietary_preferences,
-            'allergies': allergies,
-            'response': result
-        })
-    pass
+            # Fetch dietary preferences and allergies from the user profile
+            profile = UserProfile.objects.filter(user=request.user).first()
+            if profile:
+                dietary_preferences = json.loads(profile.dietary_preferences) if profile.dietary_preferences else []
+                allergies = json.loads(profile.allergies) if profile.allergies else []
+
+            return JsonResponse({
+                'response': meal_plan_obj.meal_plan,
+                'dietary_preferences': dietary_preferences,
+                'allergies': allergies,
+                'message': 'Meal plan fetched successfully!'
+            })
+        else:
+            return JsonResponse({
+                'response': '',
+                'message': 'No meal plan found for the user.',
+            }, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
