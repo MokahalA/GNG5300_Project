@@ -27,12 +27,12 @@
     }
 
     .sidebar .nav-link {
-      color: #212529; /* Ensure text color is consistent */
+      color: #212529;
     }
 
     .sidebar .nav-link.active {
       background-color: #007bff;
-      color: white; /* Ensure active link text color is white */
+      color: white;
     }
 
     .sidebar .nav-item {
@@ -44,9 +44,8 @@
       align-items: center;
     }
 
-
     .sidebar .dropdown-item {
-      color: #212529; /* Ensure dropdown text color is consistent */
+      color: #212529;
     }
 
     .sidebar .dropdown-item:hover {
@@ -154,9 +153,10 @@
 
     <!-- Main content -->
     <div class="content">
-      <div id="home-content" class="tab-content">
-        <h1 class="mb-3">Welcome, {{ first_name }}!</h1>
-        <p>This is your home page. </p>
+      <div id="home-content" class="tab-content" style="display: none;">
+        <div>
+          {% include 'meal_plans.html' %}
+        </div>
         <script>console.log('Home content loaded')</script>
       </div>
       <div id="profile-content" class="tab-content" style="display: none;">

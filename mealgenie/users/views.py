@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.http import JsonResponse
 import json
 from .forms import AddGroceryForm
+from .utils import prompt_ollama
 
 def login_view(request):
     if request.method == 'POST':
@@ -144,3 +145,36 @@ def add_grocery_view(request):
     if request.method == 'GET':
         form = AddGroceryForm()
         return render(request, 'add_grocery.html', {'form': form})
+    
+
+def generate_meal_plans(request):
+    # Obtain user dietary preferences and allergies.
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    dietary_preferences = json.loads(profile.dietary_preferences) if profile.dietary_preferences else []
+    allergies = json.loads(profile.allergies) if profile.allergies else []
+
+    # Create the prompt for the model
+    prompt = ""
+    # If the user has no dietary preferences or allergies, then use standard prompt.
+    if(len(allergies) == 0 and len(dietary_preferences) == 0):
+        prompt = "Generate a meal plan of breakfast, lunch, dinner for 7 days. Name them using Day 1, Day 2, etc. No recipes just the names of the meals."
+    # If the user has dietary preferences or allergies, then use custom prompt.
+    else:
+        prompt = "Generate a meal plan of breakfast, lunch, dinner for 7 days. Name them using Day 1, Day 2, etc. No recipes just the names of the meals. It should be free of: "
+        for allergy in allergies:
+            prompt += allergy + ". "
+        prompt += "It should be "
+        for preference in dietary_preferences:
+            prompt += preference + ". "
+
+    # Call the model to generate the meal plan.
+    result = prompt_ollama(prompt, model="llama3.2:3b")
+
+    # Call the model to generate the meal plan & return the response.
+    if request.method == 'GET':
+        return JsonResponse({
+            'dietary_preferences': dietary_preferences,
+            'allergies': allergies,
+            'response': result
+        })
+    pass
