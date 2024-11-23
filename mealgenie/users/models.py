@@ -7,6 +7,10 @@ class UserProfile(models.Model):
     dietary_preferences = models.TextField(blank=True)
     allergies = models.TextField(blank=True)
 
+class MealPlans(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)  # Enforce one plan per user
+    meal_plan = models.TextField(blank=True)
+
 class GroceryCategory(models.Model):
     category_name = models.CharField(max_length=100)
 

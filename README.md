@@ -1,5 +1,13 @@
 # MealGenie
 
+## Contributors
+
+| Name           | GitHub Profile                                     |
+|----------------|----------------------------------------------------|
+| Ahmad El Mokahal    | [@MokahalA](https://github.com/MokahalA)      |
+| Shiqi Cui           | [@s-cui801](https://github.com/s-cui801)      |
+| Fehmidabanu Saiyed  | [@F-saiyed](https://github.com/F-saiyed)      |
+| Vibhu Puri          | [@purivibhu](https://github.com/purivibhu)    |
 
 ## Setup Instructions
 
@@ -15,9 +23,11 @@
 
     macOS/Linux: `source venv/bin/activate`
 
+3. Download llama3.2 (3b) from [Ollama](https://ollama.com/library/llama3.2):
 
-3. Install the dependencies needed for the project:
+    `ollama run llama3.2:3b`
 
+4. Install the dependencies needed for the project:
 
     `pip install -r requirements.txt`
 
