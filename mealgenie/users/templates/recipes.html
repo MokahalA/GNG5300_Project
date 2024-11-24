@@ -1,0 +1,77 @@
+<div>
+    <label for="preferences">Dietary Preferences:</label>
+    <input type="text" id="preferences" placeholder="e.g., vegan, keto">
+    <label for="allergies">Allergies:</label>
+    <input type="text" id="allergies" placeholder="e.g., nuts, dairy">
+    <label for="pantry">Pantry Items (comma-separated):</label>
+    <input type="text" id="pantry" placeholder="e.g., tomato, onion">
+    <label for="cuisine">Cuisine Preference:</label>
+    <input type="text" id="cuisine" placeholder="e.g., Italian, Chinese">
+</div>
+<button onclick="generateRecipe()">Generate Recipe</button>
+<div id="generated-recipe" style="display:none;">
+    <h2 id="recipe-title"></h2>
+    <p id="recipe-ingredients"></p>
+    <p id="recipe-instructions"></p>
+</div>
+
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function generateRecipe() {
+        const pantryInput = document.getElementById('pantry');
+        const cuisineInput = document.getElementById('cuisine');
+        const allergiesInput = document.getElementById('allergies');
+
+        if (!pantryInput || !cuisineInput || !allergiesInput) {
+            console.error('One or more input elements are missing.');
+            return;
+        }
+
+        const pantry = pantryInput.value ? pantryInput.value.split(',').filter(item => item.trim()) : [];
+        const cuisine = cuisineInput.value ? cuisineInput.value.trim() : '';
+        const allergies = allergiesInput.value ? allergiesInput.value.split(',').filter(item => item.trim()) : [];
+
+        fetch('/generate-recipe/', {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken'),
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+                pantry_list: pantry,
+                cuisine: cuisine,
+                allergies: allergies
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            document.getElementById('generated-recipe').style.display = 'block';
+            document.getElementById('recipe-title').textContent = data.title;
+            document.getElementById('recipe-ingredients').textContent = data.ingredients;
+            document.getElementById('recipe-instructions').textContent = data.instructions;
+        })
+        .catch(error => {
+            console.error('Error generating recipe:', error);
+        });
+    }
+</script>
