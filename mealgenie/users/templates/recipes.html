@@ -1,77 +1,82 @@
-<div>
-    <label for="preferences">Dietary Preferences:</label>
-    <input type="text" id="preferences" placeholder="e.g., vegan, keto">
-    <label for="allergies">Allergies:</label>
-    <input type="text" id="allergies" placeholder="e.g., nuts, dairy">
-    <label for="pantry">Pantry Items (comma-separated):</label>
-    <input type="text" id="pantry" placeholder="e.g., tomato, onion">
-    <label for="cuisine">Cuisine Preference:</label>
-    <input type="text" id="cuisine" placeholder="e.g., Italian, Chinese">
-</div>
-<button onclick="generateRecipe()">Generate Recipe</button>
-<div id="generated-recipe" style="display:none;">
-    <h2 id="recipe-title"></h2>
-    <p id="recipe-ingredients"></p>
-    <p id="recipe-instructions"></p>
-</div>
+\<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipes</title>
+</head>
+<body>
+    <div class="container">
+        <!-- Cuisine selection dropdown -->
+        <label for="cuisineSelect">Select Cuisine:</label>
+        <select id="cuisineSelect" class="form-select mb-3">
+            <option value="Indian">Indian</option>
+            <option value="American">American</option>
+            <option value="Chinese">Chinese</option>
+            <option value="Italian">Italian</option>
+        </select>
 
-<script>
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
+        <!-- Button with spinner -->
+        <button class="btn btn-primary mb-4" type="button" id="generateBtn" onclick="generateRecipe()">
+            <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="btnSpinner"></span>
+            <span id="btnText">Generate</span>
+        </button>
 
-    function generateRecipe() {
-        const pantryInput = document.getElementById('pantry');
-        const cuisineInput = document.getElementById('cuisine');
-        const allergiesInput = document.getElementById('allergies');
+        <!-- Response container -->
+        <div id="recipe-response" style="display: none;"></div>
+    </div>
 
-        if (!pantryInput || !cuisineInput || !allergiesInput) {
-            console.error('One or more input elements are missing.');
-            return;
-        }
+    <script>
+        function generateRecipe() {
+            const button = document.getElementById('generateBtn');
+            const spinner = document.getElementById('btnSpinner');
+            const buttonText = document.getElementById('btnText');
+            const recipeResponseDiv = document.getElementById('recipe-response');
+            const cuisineSelect = document.getElementById('cuisineSelect');
+            const selectedCuisine = cuisineSelect.value;
 
-        const pantry = pantryInput.value ? pantryInput.value.split(',').filter(item => item.trim()) : [];
-        const cuisine = cuisineInput.value ? cuisineInput.value.trim() : '';
-        const allergies = allergiesInput.value ? allergiesInput.value.split(',').filter(item => item.trim()) : [];
+            // Reset the response display
+            recipeResponseDiv.style.display = 'none';
+            recipeResponseDiv.textContent = '';
 
-        fetch('/generate-recipe/', {
-            method: 'POST',
-            headers: {
-                "Accept": "application/json",
-                "Content-Type": "application/json",
-                "X-CSRFToken": getCookie('csrftoken'),
-                "X-Requested-With": "XMLHttpRequest"
-            },
-            body: JSON.stringify({
-                pantry_list: pantry,
-                cuisine: cuisine,
-                allergies: allergies
+            // Show the spinner and disable the button
+            spinner.classList.remove('d-none');
+            button.disabled = true;
+            buttonText.textContent = 'Generating...';
+
+            // Simulating API request using fetch (adjust URL to your actual endpoint)
+            fetch('generateRecipe/', {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ cuisine: selectedCuisine, usePantry: false })
             })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                alert(data.error);
-                return;
-            }
-            document.getElementById('generated-recipe').style.display = 'block';
-            document.getElementById('recipe-title').textContent = data.title;
-            document.getElementById('recipe-ingredients').textContent = data.ingredients;
-            document.getElementById('recipe-instructions').textContent = data.instructions;
-        })
-        .catch(error => {
-            console.error('Error generating recipe:', error);
-        });
-    }
-</script>
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(data => {
+                // Display the response data
+                recipeResponseDiv.style.display = 'block';
+                recipeResponseDiv.textContent = data;
+            })
+            .catch(error => {
+                // Handle errors
+                recipeResponseDiv.style.display = 'block';
+                recipeResponseDiv.textContent = `Error: ${error.message}`;
+            })
+            .finally(() => {
+                // Hide the spinner and enable the button
+                spinner.classList.add('d-none');
+                button.disabled = false;
+                buttonText.textContent = 'Generate';
+            });
+        }
+    </script>
+</body>
+</html>
