@@ -32,5 +32,5 @@ urlpatterns = [
     path('home/grocery-list/add', add_grocery_view, name='add_grocery'),
     path('home/getMealPlan/', get_meal_plan, name='get_meal_plan'),
     path('home/generateMealPlans/', generate_meal_plans, name='generate_meal_plans'),
-    path('generate-recipe/', generate_recipe, name='generate_recipe'),
+    path('home/generateRecipe/', generate_recipe, name='generate_recipe'),
 ]
