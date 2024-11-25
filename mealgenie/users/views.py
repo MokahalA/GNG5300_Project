@@ -235,26 +235,37 @@ def generate_recipe(request):
         except json.JSONDecodeError as e:
             return JsonResponse({'error': f'Invalid JSON: {str(e)}'}, status=400)
 
-        # Obtain allergies and preferences saved in the user profile
-        profile, _ = UserProfile.objects.get_or_create(user=request.user)
-        dietary_preferences = json.loads(profile.dietary_preferences) if profile.dietary_preferences else []
-        allergies = json.loads(profile.allergies) if profile.allergies else []
+            # Extract fields with default values
+            pantry_list = data.get('pantry_list', [])
+            cuisine = data.get('cuisine', 'any')
+            allergies = data.get('allergies', [])
+            preferences = data.get('preferences', [])
 
-        # Get cuisine and pantry preference from request
-        cuisine = data.get('cuisine', 'none')
-        usePantry = data.get('usePantry', False) # For now lets assume this is always false
+            # Construct the prompt
+            prompt = (
+                "Generate a recipe based on the following criteria:\n"
+                f"Pantry List: {', '.join(pantry_list)}\n"
+                f"Cuisine Preference: {cuisine}\n"
+                f"Allergies or Exclusions: {', '.join(allergies)}\n"
+                f"Dietary Preferences: {', '.join(preferences)}\n"
+                "Include a title, a list of ingredients, and step-by-step instructions."
+            )
 
-        if cuisine not in ['Indian', 'American', 'Chinese', 'Italian']:
-            return JsonResponse({'error': 'Invalid cuisine type selected'}, status=400)
+            # Call the Ollama model
+            try:
+                recipe_response = prompt_ollama(prompt)
+                if not recipe_response:
+                    return JsonResponse({'error': 'Failed to generate recipe. Please try again later.'}, status=500)
+            except Exception as e:
+                return JsonResponse({'error': f'Ollama model error: {str(e)}'}, status=500)
 
-        prompt = (
-            f"Generate a detailed recipe for a dish in the {cuisine} cuisine. "
-            "Format it with a title, ingredients, and then steps. Keep the recipe brief."
-        )
+            # Parse the response
+            try:
+                recipe_data = json.loads(recipe_response)
+            except json.JSONDecodeError as e:
+                return JsonResponse({'error': f'Invalid response from model: {str(e)}'}, status=500)
 
-        # Call the AI model with the prompt
-        try:
-            result = prompt_ollama(prompt, model="llama3.2:3b")  # Replace with actual AI function call
+            # Return the recipe
             return JsonResponse({
                 'response': result,
                 'message': 'Recipe successfully generated!'
