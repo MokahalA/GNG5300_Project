@@ -26,57 +26,63 @@
         <div id="recipe-response" style="display: none;"></div>
     </div>
 
-    <script>
-        function generateRecipe() {
-            const button = document.getElementById('generateBtn');
-            const spinner = document.getElementById('btnSpinner');
-            const buttonText = document.getElementById('btnText');
-            const recipeResponseDiv = document.getElementById('recipe-response');
-            const cuisineSelect = document.getElementById('cuisineSelect');
-            const selectedCuisine = cuisineSelect.value;
-
-            // Reset the response display
-            recipeResponseDiv.style.display = 'none';
-            recipeResponseDiv.textContent = '';
-
-            // Show the spinner and disable the button
-            spinner.classList.remove('d-none');
-            button.disabled = true;
-            buttonText.textContent = 'Generating...';
-
-            // Simulating API request using fetch (adjust URL to your actual endpoint)
-            fetch('generateRecipe/', {
-                method: 'POST',
-                headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({ cuisine: selectedCuisine, usePantry: false })
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+<script>
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
                 }
-                return response.text();
-            })
-            .then(data => {
-                // Display the response data
-                recipeResponseDiv.style.display = 'block';
-                recipeResponseDiv.textContent = data;
-            })
-            .catch(error => {
-                // Handle errors
-                recipeResponseDiv.style.display = 'block';
-                recipeResponseDiv.textContent = `Error: ${error.message}`;
-            })
-            .finally(() => {
-                // Hide the spinner and enable the button
-                spinner.classList.add('d-none');
-                button.disabled = false;
-                buttonText.textContent = 'Generate';
-            });
+            }
         }
-    </script>
-</body>
-</html>
+        return cookieValue;
+    }
+
+    function generateRecipe() {
+        const pantryInput = document.getElementById('pantry');
+        const cuisineInput = document.getElementById('cuisine');
+        const allergiesInput = document.getElementById('allergies');
+
+        if (!pantryInput || !cuisineInput || !allergiesInput) {
+            console.error('One or more input elements are missing.');
+            return;
+        }
+
+        const pantry = pantryInput.value ? pantryInput.value.split(',').filter(item => item.trim()) : [];
+        const cuisine = cuisineInput.value ? cuisineInput.value.trim() : '';
+        const allergies = allergiesInput.value ? allergiesInput.value.split(',').filter(item => item.trim()) : [];
+
+        fetch('/generate-recipe/', {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie('csrftoken'),
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            body: JSON.stringify({
+                pantry_list: pantry,
+                cuisine: cuisine,
+                allergies: allergies
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            document.getElementById('generated-recipe').style.display = 'block';
+            document.getElementById('recipe-title').textContent = data.title;
+            document.getElementById('recipe-ingredients').textContent = data.ingredients;
+            document.getElementById('recipe-instructions').textContent = data.instructions;
+        })
+        .catch(error => {
+            console.error('Error generating recipe:', error);
+        });
+    }
+</script>
