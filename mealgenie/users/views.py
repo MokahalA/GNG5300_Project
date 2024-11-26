@@ -3,7 +3,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-from .models import UserProfile, UserGrocery, GroceryCategory, MealPlans
+from .models import UserProfile, UserGrocery, GroceryCategory, MealPlans, Recipe
 from django.urls import reverse
 from django.http import JsonResponse
 import json
@@ -299,5 +299,30 @@ def generate_recipe(request):
 
             except Exception as e:
                 return JsonResponse({'error': f'Error generating recipe: {str(e)}'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@login_required
+def save_recipe_view(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            recipe_title = data.get('recipe_title')
+            ingredients = data.get('ingredients')
+            steps = data.get('steps')
+
+            if not recipe_title or not ingredients or not steps:
+                return JsonResponse({'error': 'All fields are required'}, status=400)
+
+            # Save recipe
+            Recipe.objects.create(
+                user=request.user,
+                recipe_title=recipe_title,
+                ingredients=ingredients,
+                steps=steps
+            )
+            return JsonResponse({'message': 'Recipe saved successfully'}, status=201)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
