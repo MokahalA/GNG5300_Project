@@ -1,9 +1,10 @@
 # users/views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
 from .models import UserProfile, UserGrocery, GroceryCategory, MealPlans
+from django.views.decorators.csrf import csrf_exempt
 from django.urls import reverse
 from django.http import JsonResponse
 import json
@@ -122,6 +123,7 @@ def grocery_list_view(request):
         # Handle AJAX requests
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             grocery_list = [{
+                'id': item.id,
                 'name': item.grocery_name.capitalize(),
                 'category': item.grocery_category.category_name.capitalize(),
                 'quantity': item.quantity,
@@ -225,3 +227,33 @@ def get_meal_plan(request):
             }, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+@login_required
+@csrf_exempt
+def edit_grocery(request, id):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            grocery = get_object_or_404(UserGrocery, id=id)
+            grocery.name = data.get('name', grocery.grocery_name)
+            grocery.category = data.get('category', grocery.grocery_category)
+            grocery.quantity = data.get('quantity', grocery.quantity)
+            grocery.unit = data.get('unit', grocery.unit)
+            grocery.expiration_date = data.get('expiration_date', grocery.expiration_date)
+            grocery.save()
+            return JsonResponse({'message': 'Grocery updated successfully'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+@csrf_exempt
+def delete_grocery(request, id):
+    if request.method == 'DELETE' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            grocery = get_object_or_404(UserGrocery, id=id)
+            grocery.delete()
+            return JsonResponse({'message': 'Grocery deleted successfully'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
