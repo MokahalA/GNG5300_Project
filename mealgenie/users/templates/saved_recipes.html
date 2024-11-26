@@ -1,0 +1,42 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recipe Step</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
+    <style>
+        /* Add styling to align the Save button */
+        .save-button-container {
+            display: flex;
+            justify-content: flex-end;
+        }
+    </style>
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="mb-4 text-center">Saved Recipes</h1>
+        {% if recipes %}
+            <div class="list-group">
+                {% for recipe in recipes %}
+                    <a href="#" class="list-group-item list-group-item-action">
+                        <h5 class="mb-1">{{ recipe.recipe_title }}</h5>
+                        <p class="mb-1"><strong>Ingredients:</strong> {{ recipe.ingredients }}</p>
+                        <small><strong>Steps:</strong> {{ recipe.steps }}</small>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-center text-muted">No saved recipes yet. Start by generating and saving some recipes!</p>
+        {% endif %}
+        <div class="text-center mt-4">
+            <a href="{% url 'generate_recipe' %}" class="btn btn-primary">Back to Recipe Generator</a>
+        </div>
+    </div>
+</body>
+</html>
+
+
+

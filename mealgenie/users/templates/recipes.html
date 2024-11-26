@@ -9,13 +9,16 @@
         /* Add styling to align the Save button */
         .save-button-container {
             display: flex;
-            justify-content: flex-end;
+            float: right;
         }
     </style>
 </head>
 <body>
+    
     <div class="container my-5">
+        
         <h1 class="mb-4 text-center">AI Generated Recipes</h1>
+        
 
         <!-- Dropdown for cuisine selection -->
         <label for="cuisineSelect" class="form-label">Choose a cuisine:</label>
@@ -31,6 +34,9 @@
             <span class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true" id="recipeBtnSpinner"></span>
             <span id="recipeBtnText">Generate</span>
         </button>
+        <div class="save-button-container">
+            <a href="{% url 'saved_recipes' %}" class="btn btn-secondary">View Saved Recipes</a>
+        </div>
 
         <!-- Recipe Response Container -->
         <div id="recipe-response" class="card shadow p-4 d-none">

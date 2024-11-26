@@ -9,6 +9,7 @@ from django.http import JsonResponse
 import json
 from .forms import AddGroceryForm
 from .utils import prompt_ollama
+from .models import Recipe
 
 def login_view(request):
     if request.method == 'POST':
@@ -326,3 +327,24 @@ def save_recipe_view(request):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@login_required
+def saved_recipes_view(request):
+    if request.method == 'POST':
+        # Handle POST request logic here (if any functionality is required)
+        return JsonResponse({'status': 'error', 'message': 'POST method is not allowed for this endpoint'}, status=405)
+
+    if request.method == 'GET':
+        # Fetch saved recipes for the logged-in user
+        # user_recipes = Recipe.objects.filter(user=request.user, delete_flag=0)
+        user_recipes = Recipe.objects.filter( delete_flag=0)
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            recipe_list = [{
+                'id': recipe.recipe_id,
+                'title': recipe.recipe_title,
+                'ingredients': recipe.ingredients,
+                'steps': recipe.steps,
+            } for recipe in user_recipes]
+            return JsonResponse({'recipes': recipe_list})
+        
+        return render(request, 'saved_recipes.html', {'recipes': user_recipes})
