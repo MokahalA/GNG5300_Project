@@ -11,6 +11,8 @@ from .forms import AddGroceryForm
 from .utils import prompt_ollama
 from .models import Recipe
 from django.core.paginator import Paginator
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 
 def login_view(request):
     if request.method == 'POST':
@@ -354,3 +356,12 @@ def saved_recipes_view(request):
         
         # return render(request, 'saved_recipes.html', {'recipes': user_recipes})
         return render(request, 'saved_recipes.html', {'recipes': page_obj})
+    
+@login_required
+@csrf_exempt
+def delete_recipe_view(request, recipe_id):
+    if request.method == 'DELETE':
+        recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+        recipe.delete()
+        return JsonResponse({'message': 'Recipe deleted successfully.'}, status=200)
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
