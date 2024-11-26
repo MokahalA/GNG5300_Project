@@ -1,19 +1,10 @@
-
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recipe Step</title>
+    <title>Saved Recipes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.1.3/css/bootstrap.min.css">
-    <style>
-        /* Add styling to align the Save button */
-        .save-button-container {
-            display: flex;
-            justify-content: flex-end;
-        }
-    </style>
 </head>
 <body>
     <div class="container my-5">
@@ -28,6 +19,43 @@
                     </a>
                 {% endfor %}
             </div>
+
+            <!-- Pagination -->
+            <nav class="mt-4">
+                <ul class="pagination justify-content-center">
+                    {% if recipes.has_previous %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page=1">First</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ recipes.previous_page_number }}">Previous</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><a class="page-link">First</a></li>
+                        <li class="page-item disabled"><a class="page-link">Previous</a></li>
+                    {% endif %}
+
+                    {% for num in recipes.paginator.page_range %}
+                        {% if recipes.number == num %}
+                            <li class="page-item active"><a class="page-link">{{ num }}</a></li>
+                        {% else %}
+                            <li class="page-item"><a class="page-link" href="?page={{ num }}">{{ num }}</a></li>
+                        {% endif %}
+                    {% endfor %}
+
+                    {% if recipes.has_next %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ recipes.next_page_number }}">Next</a>
+                        </li>
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ recipes.paginator.num_pages }}">Last</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item disabled"><a class="page-link">Next</a></li>
+                        <li class="page-item disabled"><a class="page-link">Last</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
         {% else %}
             <p class="text-center text-muted">No saved recipes yet. Start by generating and saving some recipes!</p>
         {% endif %}
@@ -37,6 +65,3 @@
     </div>
 </body>
 </html>
-
-
-

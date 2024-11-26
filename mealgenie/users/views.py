@@ -10,6 +10,7 @@ import json
 from .forms import AddGroceryForm
 from .utils import prompt_ollama
 from .models import Recipe
+from django.core.paginator import Paginator
 
 def login_view(request):
     if request.method == 'POST':
@@ -338,6 +339,10 @@ def saved_recipes_view(request):
         # Fetch saved recipes for the logged-in user
         # user_recipes = Recipe.objects.filter(user=request.user, delete_flag=0)
         user_recipes = Recipe.objects.filter( delete_flag=0)
+        paginator = Paginator(user_recipes, 5)  # Show 5 recipes per page
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        user_recipes = Recipe.objects.filter( delete_flag=0)
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             recipe_list = [{
                 'id': recipe.recipe_id,
@@ -347,4 +352,5 @@ def saved_recipes_view(request):
             } for recipe in user_recipes]
             return JsonResponse({'recipes': recipe_list})
         
-        return render(request, 'saved_recipes.html', {'recipes': user_recipes})
+        # return render(request, 'saved_recipes.html', {'recipes': user_recipes})
+        return render(request, 'saved_recipes.html', {'recipes': page_obj})
