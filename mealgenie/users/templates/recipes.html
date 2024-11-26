@@ -46,18 +46,18 @@
             const recipeTitle = document.querySelector('.recipe-title');
             const ingredientsList = document.querySelector('.ingredients-list');
             const stepsList = document.querySelector('.steps-list');
-
+    
             // Reset the response display
             recipeResponseDiv.classList.add('d-none');
             recipeTitle.textContent = '';
             ingredientsList.innerHTML = '';
             stepsList.innerHTML = '';
-
+    
             // Show the spinner and disable the button
             spinner.classList.remove('d-none');
             button.disabled = true;
             buttonText.textContent = 'Generating...';
-
+    
             fetch('generateRecipe/', {
                 method: 'POST',
                 headers: {
@@ -65,31 +65,33 @@
                     'Content-Type': 'application/json',
                     'X-CSRFToken': '{{ csrf_token }}'
                 },
-                body: JSON.stringify({ cuisine: cuisine, usePantry: false })
+                body: JSON.stringify({ cuisine: cuisine })
             })
             .then(response => response.json())
             .then(data => {
-                // Parse the response and format it
-                const responseText = data.response;
-                const [title, ingredients, steps] = parseRecipe(responseText);
-
-                // Update the UI
-                recipeTitle.textContent = title;
-                ingredients.forEach(ingredient => {
-                    const li = document.createElement('li');
-                    li.textContent = ingredient;
-                    li.classList.add('list-group-item');
-                    ingredientsList.appendChild(li);
-                });
-                steps.forEach(step => {
-                    const li = document.createElement('li');
-                    li.textContent = step;
-                    li.classList.add('list-group-item');
-                    stepsList.appendChild(li);
-                });
-
-                // Show the response container
-                recipeResponseDiv.classList.remove('d-none');
+                if (data.recipe && data.recipe.length > 0) {
+                    const recipe = data.recipe[0]; // Display the first recipe
+    
+                    // Update the UI with the recipe details
+                    recipeTitle.textContent = recipe.name;
+                    recipe.ingredients.split('\n').forEach(ingredient => {
+                        const li = document.createElement('li');
+                        li.textContent = ingredient;
+                        li.classList.add('list-group-item');
+                        ingredientsList.appendChild(li);
+                    });
+                    recipe.steps.split('\n').forEach(step => {
+                        const li = document.createElement('li');
+                        li.textContent = step;
+                        li.classList.add('list-group-item');
+                        stepsList.appendChild(li);
+                    });
+    
+                    // Show the response container
+                    recipeResponseDiv.classList.remove('d-none');
+                } else {
+                    alert('No recipe found in the response. Please try again.');
+                }
             })
             .catch(error => {
                 alert(`Error: ${error.message}`);
@@ -101,24 +103,6 @@
                 buttonText.textContent = 'Generate';
             });
         }
-
-        function parseRecipe(responseText) {
-            // Match title, ingredients, and steps
-            const titleMatch = responseText.match(/\*\*Recipe: (.*?)\*\*/);
-            const ingredientsMatch = responseText.match(/Ingredients:\*\*(.*?)\*\*/s);
-            const stepsMatch = responseText.match(/Steps:\*\*(.*?)$/s);
-
-            // Extract data or provide default values
-            const title = titleMatch ? titleMatch[1].trim() : 'Recipe';
-            const ingredients = ingredientsMatch 
-                ? ingredientsMatch[1].split('\n').filter(line => line.trim()).map(line => line.trim()) 
-                : [];
-            const steps = stepsMatch 
-                ? stepsMatch[1].split(/\d+\.\s/).filter(step => step.trim()).map(step => step.trim())
-                : [];
-
-            return [title, ingredients, steps];
-        }
-    </script>
+    </script>    
 </body>
 </html>

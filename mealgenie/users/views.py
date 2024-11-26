@@ -241,24 +241,63 @@ def generate_recipe(request):
         allergies = json.loads(profile.allergies) if profile.allergies else []
 
         # Get cuisine and pantry preference from request
-        # Recommended cuisine values to the user are so an input where the user selects either "Indian" or "American" or "Chinese" or "Italian"
- 
-        cuisine = data.get('cuisine', 'none')
-        usePantry = data.get('usePantry', False) # For now lets assume this is always false
+        cuisine = data.get('cuisine', 'None')
 
-        prompt = (
-            f"Generate a detailed recipe for a dish in the {cuisine} cuisine. "
-            "Format it with a title, ingredients, and then steps. Keep the recipe brief."
-        )
+        # Initialize prompt and build dynamically
+        prompt = "Always use all of these labels in your response: Name, Ingredients, Steps. Do not provide any extra information. Do not use any styling in your response."
 
-        # Call the AI model with the prompt
-        try:
-            result = prompt_ollama(prompt, model="llama3.2:3b")  # Replace with actual AI function call
-            return JsonResponse({
-                'response': result,
-                'message': 'Recipe successfully generated!'
-            })
-        except Exception as e:
-            return JsonResponse({'error': f'Error generating recipe: {str(e)}'}, status=500)
+        if cuisine != "None":
+            prompt += f"Generate a recipe for a dish in the {cuisine} cuisine. "
+        else:
+            prompt += "Generate a recipe for a dish from any cuisine. "
+
+        if dietary_preferences:
+            prompt += f"Ensure the recipe adheres to the following dietary preferences: {', '.join(dietary_preferences)}. "
+
+        if allergies:
+            prompt += f"Avoid using ingredients that include the following allergens: {', '.join(allergies)}. "
+
+        # Loop until the response contains the necessary information
+        while True:
+            try:
+                result = prompt_ollama(prompt, model="llama3.2:3b")  # Replace with actual AI function call
+
+                # Remove all '*' characters from the result
+                result = result.replace('*', '')
+
+                # Ensure the result contains all the necessary labels
+                if "Name:" in result and "Ingredients:" in result and "Steps:" in result:
+                    # Split the result into parts based on labels
+                    parts = result.split('Name: ')[1:]  # Skip the initial empty string before 'Name'
+
+                    recipe_details = []
+                    for part in parts:
+                        # Extract Name, Ingredients, and Steps
+                        name = part.split('Ingredients:')[0].strip()
+                        ingredients_and_steps = part.split('Ingredients:')[1].split('Steps:')
+                        ingredients = ingredients_and_steps[0].strip()
+                        steps = ingredients_and_steps[1].strip() if len(ingredients_and_steps) > 1 else ""
+
+                        # Store them in an array
+                        recipe_details.append({
+                            'name': name,
+                            'ingredients': ingredients,
+                            'steps': steps,
+                            'promptResult': result,
+                            'dietary_preferences': dietary_preferences,
+                            'allergies': allergies,
+                        })
+
+                    return JsonResponse({
+                        'response': result,  # This is the prompt response
+                        'recipe': recipe_details,  # This is the parsed recipe details object
+                        'message': 'Recipe successfully generated!'
+                    })
+                else:
+                    # Reprompt if any of the necessary labels are missing
+                    continue
+
+            except Exception as e:
+                return JsonResponse({'error': f'Error generating recipe: {str(e)}'}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
