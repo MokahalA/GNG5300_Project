@@ -22,7 +22,7 @@ jobs:
       run: ls -R
 
     - name: Print GNG5300_Project structure
-      run: ls -R GNG5300_Project
+      run: ls -R 
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
