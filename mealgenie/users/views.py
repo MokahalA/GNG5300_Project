@@ -326,3 +326,19 @@ def save_recipe_view(request):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+@login_required
+def get_recipes(request):
+    if request.method == 'GET':
+        recipes = Recipe.objects.filter(user=request.user)
+        recipe_list = [{
+            'id': recipe.recipe_id,
+            'name': recipe.recipe_title,
+            'ingredients': recipe.ingredients,
+            'steps': recipe.steps
+        } for recipe in recipes]
+        return JsonResponse({'recipes': recipe_list})
+    return JsonResponse({'error': 'Invalid request method. Only GET is allowed.'}, status=405)
+

@@ -18,7 +18,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-from users.views import login_view, register_view, logout_view, home_view, profile_view, grocery_list_view, add_grocery_view, generate_meal_plans, get_meal_plan, generate_recipe, save_recipe_view  
+from users.views import login_view, register_view, logout_view, home_view, profile_view, grocery_list_view, add_grocery_view, generate_meal_plans, get_meal_plan, generate_recipe, save_recipe_view, get_recipes 
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -34,4 +34,6 @@ urlpatterns = [
     path('home/generateMealPlans/', generate_meal_plans, name='generate_meal_plans'),
     path('home/generateRecipe/', generate_recipe, name='generate_recipe'),
     path('home/save_recipe/', save_recipe_view, name='save_recipe'),
+
+    path('home/getRecipes/', get_recipes, name='get_recipes'),
 ]
