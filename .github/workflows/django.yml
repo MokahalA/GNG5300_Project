@@ -33,7 +33,6 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-      working-directory: GNG5300_Project/
 
     - name: Run Tests
       run: |
