@@ -128,10 +128,10 @@
                         recipeTable.row.add([
                             recipe.id,
                             recipe.name,
-                            `<button class="btn btn-success btn-sm" onclick="viewRecipe(${encodeURIComponent(
-                                JSON.stringify(recipe)
-                            )})">View</button>
-                             <button class="btn btn-danger btn-sm" onclick="deleteRecipe(${recipe.id})">Delete</button>`
+                            `<button class="btn btn-success btn-sm" 
+                                onclick='viewRecipe(${JSON.stringify(recipe)})'>View</button>
+                            <button class="btn btn-danger btn-sm" 
+                                onclick="deleteRecipe(${recipe.id})">Delete</button>`
                         ]);
                     });
 
@@ -143,8 +143,7 @@
                 });
             }
 
-            function viewRecipe(recipeJSON) {
-                const recipe = JSON.parse(decodeURIComponent(recipeJSON));
+            function viewRecipe(recipe) {
                 document.getElementById('recipe-name').textContent = recipe.name;
                 document.getElementById('recipe-ingredients').textContent = recipe.ingredients;
                 document.getElementById('recipe-steps').textContent = recipe.steps;
