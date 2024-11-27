@@ -17,16 +17,25 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+
+    - name: Print root directory structure
+      run: ls -R
+
+    - name: Print GNG5300_Project structure
+      run: ls -R GNG5300_Project
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Install Dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-      
+      working-directory: GNG5300_Project/mealgenie
+
     - name: Run Tests
       run: |
         python manage.py test
-      working-directory: GNG5300_Project/mealgenie  
+      working-directory: GNG5300_Project/mealgenie
