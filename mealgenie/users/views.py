@@ -9,6 +9,8 @@ from django.http import JsonResponse
 import json
 from .forms import AddGroceryForm
 from .utils import prompt_ollama
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 
 def login_view(request):
     if request.method == 'POST':
@@ -326,3 +328,32 @@ def save_recipe_view(request):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+@login_required
+def get_recipes(request):
+    if request.method == 'GET':
+        recipes = Recipe.objects.filter(delete_flag=0, user=request.user)
+        recipe_list = [{
+            'id': recipe.recipe_id,
+            'name': recipe.recipe_title,
+            'ingredients': recipe.ingredients,
+            'steps': recipe.steps
+        } for recipe in recipes]
+        return JsonResponse({'recipes': recipe_list})
+    return JsonResponse({'error': 'Invalid request method. Only GET is allowed.'}, status=405)
+
+@login_required
+def delete_recipe(request, recipe_id):
+    if request.method == 'DELETE':
+        # Retrieve the recipe and ensure it belongs to the logged-in user
+        recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+
+        # Mark the recipe as deleted instead of deleting it
+        recipe.delete_flag = 1
+        recipe.save()
+
+        return JsonResponse({'message': 'Recipe marked as deleted.'}, status=200)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
