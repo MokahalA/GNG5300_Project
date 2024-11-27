@@ -8,6 +8,9 @@
 </head>
 <body>
     <div class="container my-5">
+        <div id="meal-plans-container" class="mt-4">
+            <!-- Meal plans will be dynamically inserted here -->
+        </div>
         <h1 class="mb-4 text-center">Saved Recipes</h1>
         {% if recipes %}
             <div class="list-group">
@@ -84,7 +87,9 @@
                 .then(response => {
                     if (response.ok) {
                         alert("Recipe deleted successfully!");
-                        location.reload(); // Reload the page to reflect changes
+                        // location.reload(); // Reload the page to reflect changes
+                        // call the fetch function
+
                     } else {
                         alert("Failed to delete the recipe. Please try again.");
                     }
@@ -95,6 +100,52 @@
                 });
             }
         }
+        
+        async function fetch_recipes() {
+            const container = document.getElementById('meal-plans-container');
+            try {
+                const response = await fetch('saved_recipes/', {
+                    method: 'GET',
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": "{{ csrf_token }}",
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+                console.log(data);
+
+                if (response.status === 404) {
+                    console.log("1");
+                    container.innerHTML = `
+                        <div class="alert alert-info" role="alert">
+                            <i class="fas fa-info-circle me-2"></i>
+                            No Recipes found. Click "Generate" to create one.
+                        </div>
+                    `;
+                } else if (!response.ok) {
+                    console.log("2");
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                } else {
+                    console.log("3");
+                    const data = await response.json();
+                    // displayrecipes(
+                    //     data.response,
+                    //     data.dietary_preferences || [],
+                    //     data.allergies || []
+                    // );
+                }
+            } catch (error) {
+                console.error('Error fetching meal plan:', error);
+                container.innerHTML = `
+                    <div class="alert alert-danger" role="alert">
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                        Failed to load Recipes. Please try again later.
+                    </div>
+                `;
+            }
+        }
+        fetch_recipes();
     </script>
 </body>
 </html>

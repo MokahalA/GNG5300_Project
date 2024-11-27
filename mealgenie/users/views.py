@@ -176,7 +176,7 @@ def generate_meal_plans(request):
 
         try:
             # Call the model to generate the meal plan
-            result = prompt_ollama(prompt, model="llama3.2:3b")  # Replace `prompt_ollama` with your model function
+            result = prompt_ollama(prompt, model="llama3.2")  # Replace `prompt_ollama` with your model function
 
             # Save or overwrite the user's meal plan in the database
             meal_plan_obj, _ = MealPlans.objects.get_or_create(user=request.user)
@@ -264,7 +264,7 @@ def generate_recipe(request):
         # Loop until the response contains the necessary information
         while True:
             try:
-                result = prompt_ollama(prompt, model="llama3.2:3b")  # Replace with actual AI function call
+                result = prompt_ollama(prompt, model="llama3.2")  # Replace with actual AI function call
 
                 # Remove all '*' characters from the result
                 result = result.replace('*', '')
@@ -339,8 +339,8 @@ def saved_recipes_view(request):
 
     if request.method == 'GET':
         # Fetch saved recipes for the logged-in user
-        # user_recipes = Recipe.objects.filter(user=request.user, delete_flag=0)
-        user_recipes = Recipe.objects.filter( delete_flag=0)
+        user_recipes = Recipe.objects.filter(user=request.user, delete_flag=0)
+        # user_recipes = Recipe.objects.filter( delete_flag=0)
         paginator = Paginator(user_recipes, 5)  # Show 5 recipes per page
         page_number = request.GET.get('page')
         page_obj = paginator.get_page(page_number)
@@ -352,10 +352,11 @@ def saved_recipes_view(request):
                 'ingredients': recipe.ingredients,
                 'steps': recipe.steps,
             } for recipe in user_recipes]
-            return JsonResponse({'recipes': recipe_list})
+            # return JsonResponse({'recipes': recipe_list})
+            return JsonResponse({ 'recipes': page_obj})
         
         # return render(request, 'saved_recipes.html', {'recipes': user_recipes})
-        return render(request, 'saved_recipes.html', {'recipes': page_obj})
+        # return render(request, 'saved_recipes.html', {'recipes': page_obj})
     
 @login_required
 @csrf_exempt

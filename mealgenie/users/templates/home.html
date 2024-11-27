@@ -134,6 +134,11 @@
           </a>
         </li>
         <li class="nav-item">
+          <a href="#" class="nav-link" id="recipes-list-tab">
+            <i class="fas fa-utensils me-2"></i> Recipes list
+          </a>
+        </li>
+        <li class="nav-item">
           <a href="#my-groceries" class="nav-link" id="groceries-tab">
             <i class="fas fa-shopping-cart me-2"></i> My Groceries
           </a>
@@ -172,6 +177,13 @@
         <h1>Recipes</h1>
         <div>
           {% include 'recipes.html' %} 
+        </div>
+        <script>console.log('Recipes content loaded')</script>
+      </div>
+      <div id="recipes-list-content" class="tab-content" style="display: none;">
+        <h1>Recipes</h1>
+        <div>
+          {% include 'saved_recipes.html' %} 
         </div>
         <script>console.log('Recipes content loaded')</script>
       </div>
