@@ -3,24 +3,17 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
-<<<<<<< HEAD
-from .models import UserProfile, UserGrocery, GroceryCategory, MealPlans
 from django.views.decorators.csrf import csrf_exempt
-=======
 from .models import UserProfile, UserGrocery, GroceryCategory, MealPlans, Recipe
->>>>>>> c1d13d99dcc1bad1a72b0337f1887e03f61da08d
 from django.urls import reverse
 from django.http import JsonResponse
 import json
 from .forms import AddGroceryForm
 from .utils import prompt_ollama
-<<<<<<< HEAD
 from datetime import timedelta
 from django.utils.timezone import now
-=======
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import get_object_or_404
->>>>>>> c1d13d99dcc1bad1a72b0337f1887e03f61da08d
 
 def login_view(request):
     if request.method == 'POST':
@@ -259,7 +252,6 @@ def get_meal_plan(request):
             }, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
-<<<<<<< HEAD
     
 @login_required
 @csrf_exempt
@@ -306,7 +298,6 @@ def delete_grocery(request, id):
 #                 'expiration_date': item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else None
 #             } for item in expiring_groceries]
 #     return JsonResponse({'groceries': grocery_list})
-=======
 
 @login_required
 def generate_recipe(request):
@@ -437,4 +428,3 @@ def delete_recipe(request, recipe_id):
         return JsonResponse({'message': 'Recipe marked as deleted.'}, status=200)
 
     return JsonResponse({'error': 'Invalid request method.'}, status=400)
->>>>>>> c1d13d99dcc1bad1a72b0337f1887e03f61da08d

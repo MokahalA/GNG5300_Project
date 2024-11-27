@@ -18,11 +18,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
-<<<<<<< HEAD
 from users.views import login_view, register_view, logout_view, home_view, profile_view, grocery_list_view, add_grocery_view, generate_meal_plans, get_meal_plan, edit_grocery, delete_grocery
-=======
 from users.views import delete_recipe, login_view, register_view, logout_view, home_view, profile_view, grocery_list_view, add_grocery_view, generate_meal_plans, get_meal_plan, generate_recipe, save_recipe_view, get_recipes 
->>>>>>> c1d13d99dcc1bad1a72b0337f1887e03f61da08d
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -36,14 +33,11 @@ urlpatterns = [
     path('home/grocery-list/add', add_grocery_view, name='add_grocery'),
     path('home/getMealPlan/', get_meal_plan, name='get_meal_plan'),
     path('home/generateMealPlans/', generate_meal_plans, name='generate_meal_plans'),
-<<<<<<< HEAD
     path('home/edit-grocery/<int:id>/', edit_grocery, name='edit_grocery'),
     path('home/delete-grocery/<int:id>/', delete_grocery, name='delete_grocery'),
     # path('home/track-expiration/', track_expiration, name='track_expiration')
-=======
     path('home/generateRecipe/', generate_recipe, name='generate_recipe'),
     path('home/save_recipe/', save_recipe_view, name='save_recipe'),
->>>>>>> c1d13d99dcc1bad1a72b0337f1887e03f61da08d
 
     path('home/getRecipes/', get_recipes, name='get_recipes'),
     path('deleteRecipe/<int:recipe_id>/', delete_recipe, name='delete_recipe'),
