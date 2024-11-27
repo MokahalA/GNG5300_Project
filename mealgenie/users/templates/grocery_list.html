@@ -5,6 +5,24 @@
 
     <!-- Add New Grocery Button -->
     <a href="{% url 'add_grocery' %}" class="btn btn-primary mb-3">Add New Grocery</a>
+
+    <!-- Sort Dropdown -->
+    <div class="sort-dropdown">
+      <label for="sort-options" class="form-label">Sort Groceries:</label>
+      <select id="sort-options" class="form-select">
+          <option value="category-asc">Sort by Catogory (Ascending)</option>
+          <option value="category-desc">Sort by Catogory (Descending)</option>
+          <option value="expiration_date-asc">Sort by Expiration (Ascending)</option>
+          <option value="expiration_date-desc">Sort by Expiration (Descending)</option>
+      </select>
+    </div>
+
+    <div class="track-expiration">
+      <label for="days">Track items expiring in:</label>
+      <input type="number" id="days" class="form-control" min="1" value="7">
+      <button class="btn btn-warning mt-2 track-expiration-btn">Track</button>
+    </div>
+  
     <!-- Grocery List -->
     <div id="grocery-list">
         <!-- AJAX will populate this -->
@@ -51,15 +69,23 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const list = document.getElementById('grocery-list');
+    const sortOptions = document.getElementById('sort-options'); // Dropdown element
+    const days = document.getElementById('days');
+    const trackButton = document.querySelector('.track-expiration-btn');
     
-    function loadGroceryList() {
+    function loadGroceryList(sort_by = 'category', order = 'asc', days = null) {
         
         list.innerHTML = `
             <div class="spinner-border" role="status">
                 <span class="visually-hidden">Loading...</span>
             </div>
         `;
-        fetch('grocery-list/', {
+        let query = `?sort_by=${sort_by}&order=${order}`;
+        if (days) {
+            query += `&days=${days}`; // Append days parameter if provided
+        }
+
+        fetch(`grocery-list/${query}`, {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
@@ -144,6 +170,22 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => console.error('Error deleting grocery:', error));
         }
     }
+
+    function applySorting() {
+      const sortOption = sortOptions.value; // Get selected value
+      const [sort_by, order] = sortOption.split('-'); // Split value into sortBy and order
+      const expirationDays = days.value; // Get expiration days value
+      loadGroceryList(sort_by, order, expirationDays); // Call existing function with sorting parameters
+    } 
+    // Attach change event listener to the dropdown
+    sortOptions.addEventListener('change', applySorting);
+    // days.addEventListener('input', applySorting); // Trigger when expiration days change
+
+    // Event listener for Track button
+    trackButton.addEventListener('click', function() {
+        applySorting(); // Trigger sorting and tracking when the button is clicked
+    });
+
 
     // Save the edited grocery data
     document.getElementById('saveEditGrocery').addEventListener('click', function () {

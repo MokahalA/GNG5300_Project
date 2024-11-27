@@ -34,5 +34,6 @@ urlpatterns = [
     path('home/generateMealPlans/', generate_meal_plans, name='generate_meal_plans'),
     path('home/edit-grocery/<int:id>/', edit_grocery, name='edit_grocery'),
     path('home/delete-grocery/<int:id>/', delete_grocery, name='delete_grocery'),
+    # path('home/track-expiration/', track_expiration, name='track_expiration')
 
 ]

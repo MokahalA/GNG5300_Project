@@ -10,6 +10,8 @@ from django.http import JsonResponse
 import json
 from .forms import AddGroceryForm
 from .utils import prompt_ollama
+from datetime import timedelta
+from django.utils.timezone import now
 
 def login_view(request):
     if request.method == 'POST':
@@ -118,7 +120,28 @@ def profile_view(request):
 @login_required
 def grocery_list_view(request):
     if request.method == 'GET':
+        sort_by = request.GET.get('sort_by', 'category')  # Default to category
+        order = request.GET.get('order', 'asc')  # Default to ascending order
+        days = request.GET.get('days', None)  # Default to 7 days
+
         user_groceries = UserGrocery.objects.filter(user=request.user)
+        if days:
+            expiration_threshold = now().date() + timedelta(days=int(days))
+            user_groceries = user_groceries.filter(expiration_date__lte=expiration_threshold)
+
+        if sort_by == 'expiration_date':
+            if order == 'asc':
+                user_groceries = user_groceries.order_by('expiration_date')
+            else:
+                user_groceries = user_groceries.order_by('-expiration_date')
+        elif sort_by == 'category':
+            if order == 'asc':
+                user_groceries = user_groceries.order_by('grocery_category')
+            else:
+                user_groceries = user_groceries.order_by('-grocery_category')
+
+
+        print(user_groceries)
 
         # Handle AJAX requests
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -257,3 +280,19 @@ def delete_grocery(request, id):
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=400)
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+# def track_expiration(request):
+#     days = int(request.GET.get('days', 7))  # Default to 7 days
+#     expiration_threshold = now().date() + timedelta(days=days)
+
+#     expiring_groceries = UserGrocery.objects.filter(user=request.user).filter(expiration_date__lte=expiration_threshold)
+
+#     grocery_list = [{
+#                 'id': item.id,
+#                 'name': item.grocery_name.capitalize(),
+#                 'category': item.grocery_category.category_name.capitalize(),
+#                 'quantity': item.quantity,
+#                 'unit': item.unit,
+#                 'expiration_date': item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else None
+#             } for item in expiring_groceries]
+#     return JsonResponse({'groceries': grocery_list})
