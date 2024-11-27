@@ -66,3 +66,14 @@ class UserGrocery(models.Model):
         default=UNIT
     )
     expiration_date = models.DateField(blank=True, null=True)
+
+class Recipe(models.Model):
+    recipe_id = models.AutoField(primary_key=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    recipe_title = models.CharField(max_length=255)
+    ingredients = models.TextField()
+    steps = models.TextField()
+    delete_flag = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.recipe_title

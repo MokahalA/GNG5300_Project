@@ -3,15 +3,24 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+<<<<<<< HEAD
 from .models import UserProfile, UserGrocery, GroceryCategory, MealPlans
 from django.views.decorators.csrf import csrf_exempt
+=======
+from .models import UserProfile, UserGrocery, GroceryCategory, MealPlans, Recipe
+>>>>>>> c1d13d99dcc1bad1a72b0337f1887e03f61da08d
 from django.urls import reverse
 from django.http import JsonResponse
 import json
 from .forms import AddGroceryForm
 from .utils import prompt_ollama
+<<<<<<< HEAD
 from datetime import timedelta
 from django.utils.timezone import now
+=======
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
+>>>>>>> c1d13d99dcc1bad1a72b0337f1887e03f61da08d
 
 def login_view(request):
     if request.method == 'POST':
@@ -250,6 +259,7 @@ def get_meal_plan(request):
             }, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+<<<<<<< HEAD
     
 @login_required
 @csrf_exempt
@@ -296,3 +306,135 @@ def delete_grocery(request, id):
 #                 'expiration_date': item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else None
 #             } for item in expiring_groceries]
 #     return JsonResponse({'groceries': grocery_list})
+=======
+
+@login_required
+def generate_recipe(request):
+    if request.method == 'POST':
+        # Parse JSON request
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError as e:
+            return JsonResponse({'error': f'Invalid JSON: {str(e)}'}, status=400)
+
+        # Obtain allergies and preferences saved in the user profile
+        profile, _ = UserProfile.objects.get_or_create(user=request.user)
+        dietary_preferences = json.loads(profile.dietary_preferences) if profile.dietary_preferences else []
+        allergies = json.loads(profile.allergies) if profile.allergies else []
+
+        # Get cuisine and pantry preference from request
+        cuisine = data.get('cuisine', 'None')
+
+        # Initialize prompt and build dynamically
+        prompt = "Always use all of these labels in your response: Name, Ingredients, Steps. Do not provide any extra information. Do not use any styling in your response."
+
+        if cuisine != "None":
+            prompt += f"Generate a recipe for a dish in the {cuisine} cuisine. "
+        else:
+            prompt += "Generate a recipe for a dish from any cuisine. "
+
+        if dietary_preferences:
+            prompt += f"Ensure the recipe adheres to the following dietary preferences: {', '.join(dietary_preferences)}. "
+
+        if allergies:
+            prompt += f"Avoid using ingredients that include the following allergens: {', '.join(allergies)}. "
+
+        # Loop until the response contains the necessary information
+        while True:
+            try:
+                result = prompt_ollama(prompt, model="llama3.2:3b")  # Replace with actual AI function call
+
+                # Remove all '*' characters from the result
+                result = result.replace('*', '')
+
+                # Ensure the result contains all the necessary labels
+                if "Name:" in result and "Ingredients:" in result and "Steps:" in result:
+                    # Split the result into parts based on labels
+                    parts = result.split('Name: ')[1:]  # Skip the initial empty string before 'Name'
+
+                    recipe_details = []
+                    for part in parts:
+                        # Extract Name, Ingredients, and Steps
+                        name = part.split('Ingredients:')[0].strip()
+                        ingredients_and_steps = part.split('Ingredients:')[1].split('Steps:')
+                        ingredients = ingredients_and_steps[0].strip()
+                        steps = ingredients_and_steps[1].strip() if len(ingredients_and_steps) > 1 else ""
+
+                        # Store them in an array
+                        recipe_details.append({
+                            'name': name,
+                            'ingredients': ingredients,
+                            'steps': steps,
+                            'promptResult': result,
+                            'dietary_preferences': dietary_preferences,
+                            'allergies': allergies,
+                        })
+
+                    return JsonResponse({
+                        'response': result,  # This is the prompt response
+                        'recipe': recipe_details,  # This is the parsed recipe details object
+                        'message': 'Recipe successfully generated!'
+                    })
+                else:
+                    # Reprompt if any of the necessary labels are missing
+                    continue
+
+            except Exception as e:
+                return JsonResponse({'error': f'Error generating recipe: {str(e)}'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+@login_required
+def save_recipe_view(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            recipe_title = data.get('recipe_title')
+            ingredients = data.get('ingredients')
+            steps = data.get('steps')
+
+            if not recipe_title or not ingredients or not steps:
+                return JsonResponse({'error': 'All fields are required'}, status=400)
+
+            # Save recipe
+            Recipe.objects.create(
+                user=request.user,
+                recipe_title=recipe_title,
+                ingredients=ingredients,
+                steps=steps
+            )
+            return JsonResponse({'message': 'Recipe saved successfully'}, status=201)
+        except json.JSONDecodeError:
+            return JsonResponse({'error': 'Invalid JSON'}, status=400)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+@login_required
+def get_recipes(request):
+    if request.method == 'GET':
+        recipes = Recipe.objects.filter(delete_flag=0, user=request.user)
+        recipe_list = [{
+            'id': recipe.recipe_id,
+            'name': recipe.recipe_title,
+            'ingredients': recipe.ingredients,
+            'steps': recipe.steps
+        } for recipe in recipes]
+        return JsonResponse({'recipes': recipe_list})
+    return JsonResponse({'error': 'Invalid request method. Only GET is allowed.'}, status=405)
+
+@login_required
+def delete_recipe(request, recipe_id):
+    if request.method == 'DELETE':
+        # Retrieve the recipe and ensure it belongs to the logged-in user
+        recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+
+        # Mark the recipe as deleted instead of deleting it
+        recipe.delete_flag = 1
+        recipe.save()
+
+        return JsonResponse({'message': 'Recipe marked as deleted.'}, status=200)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
+>>>>>>> c1d13d99dcc1bad1a72b0337f1887e03f61da08d
