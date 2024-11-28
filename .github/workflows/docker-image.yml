@@ -1,4 +1,4 @@
-name: Docker Image CI for MealGenie
+name: Docker Image CI for MealGenie Project
 
 on:
   push:
