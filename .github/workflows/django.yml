@@ -1,4 +1,4 @@
-name: Django CI
+name: Django CI for GNG Project
 
 on:
   push:
