@@ -16,3 +16,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag my-image-name:latest
+
+      # Save the Docker image to a tar file
+    - name: Save Docker image to file
+      run: docker save my-image-name:latest -o my-image-name.tar
