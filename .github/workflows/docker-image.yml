@@ -20,3 +20,9 @@ jobs:
       # Save the Docker image to a tar file
     - name: Save Docker image to file
       run: docker save my-image-name:latest -o my-image-name.tar
+
+    - name: Upload Docker image artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: mealgenie-docker-image
+        path: my-image-name.tar
