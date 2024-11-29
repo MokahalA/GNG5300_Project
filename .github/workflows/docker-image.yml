@@ -2,7 +2,7 @@ name: Docker Image CI
 
 on:
   push:
-    branches: [ "main","Femy_CI_CD_Branch" ]
+    branches: [ "main","Femy_CI_CD_Branch", "Femy_Fresh" ]
   pull_request:
     branches: [ "main" ]
 
