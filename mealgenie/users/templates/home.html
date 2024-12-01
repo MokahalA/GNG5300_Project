@@ -130,7 +130,12 @@
         </li>
         <li class="nav-item">
           <a href="#" class="nav-link" id="recipes-tab">
-            <i class="fas fa-utensils me-2"></i> Recipes
+            <i class="fas fa-utensils me-2"></i> Recipe Generator
+          </a>
+        </li>
+        <li class="nav-item">
+          <a href="#" class="nav-link" id="recipes-list-tab">
+            <i class="fas fa-list me-2"></i> My Recipes
           </a>
         </li>
         <li class="nav-item">
@@ -169,15 +174,21 @@
         <script>console.log('Profile content loaded')</script>
       </div>
       <div id="recipes-content" class="tab-content" style="display: none;">
-        <h1>Recipes</h1>
         <div>
           {% include 'recipes.html' %} 
         </div>
         <script>console.log('Recipes content loaded')</script>
       </div>
-      <div id="groceries-content" class="tab-content" style="display: none;">
-        {% include 'grocery_list.html' %}
+      <div id="recipes-list-content" class="tab-content" style="display: none;">
+        <div>
+          {% include 'recipes_list.html' %}
+        </div>
       </div>
+      <div id="groceries-content" class="tab-content" style="display: none;">
+        <div>
+        {% include 'grocery_list.html' %}
+        </div>
+      </div> 
     </div>
   </main>
 

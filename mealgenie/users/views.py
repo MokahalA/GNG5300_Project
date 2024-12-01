@@ -1,14 +1,19 @@
 # users/views.py
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login, logout
+from django.views.decorators.csrf import csrf_exempt
 from .models import UserProfile, UserGrocery, GroceryCategory, MealPlans, Recipe
 from django.urls import reverse
 from django.http import JsonResponse
 import json
 from .forms import AddGroceryForm
 from .utils import prompt_ollama
+from datetime import timedelta
+from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt
+from django.shortcuts import get_object_or_404
 
 def login_view(request):
     if request.method == 'POST':
@@ -117,11 +122,33 @@ def profile_view(request):
 @login_required
 def grocery_list_view(request):
     if request.method == 'GET':
+        sort_by = request.GET.get('sort_by', 'category')  # Default to category
+        order = request.GET.get('order', 'asc')  # Default to ascending order
+        days = request.GET.get('days', None)  # Default to 7 days
+
         user_groceries = UserGrocery.objects.filter(user=request.user)
+        if days:
+            expiration_threshold = now().date() + timedelta(days=int(days))
+            user_groceries = user_groceries.filter(expiration_date__lte=expiration_threshold)
+
+        if sort_by == 'expiration_date':
+            if order == 'asc':
+                user_groceries = user_groceries.order_by('expiration_date')
+            else:
+                user_groceries = user_groceries.order_by('-expiration_date')
+        elif sort_by == 'category':
+            if order == 'asc':
+                user_groceries = user_groceries.order_by('grocery_category')
+            else:
+                user_groceries = user_groceries.order_by('-grocery_category')
+
+
+        print(user_groceries)
 
         # Handle AJAX requests
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             grocery_list = [{
+                'id': item.id,
                 'name': item.grocery_name.capitalize(),
                 'category': item.grocery_category.category_name.capitalize(),
                 'quantity': item.quantity,
@@ -225,6 +252,52 @@ def get_meal_plan(request):
             }, status=404)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+    
+@login_required
+@csrf_exempt
+def edit_grocery(request, id):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            data = json.loads(request.body)
+            grocery = get_object_or_404(UserGrocery, id=id)
+            grocery.name = data.get('name', grocery.grocery_name)
+            grocery.category = data.get('category', grocery.grocery_category)
+            grocery.quantity = data.get('quantity', grocery.quantity)
+            grocery.unit = data.get('unit', grocery.unit)
+            grocery.expiration_date = data.get('expiration_date', grocery.expiration_date)
+            grocery.save()
+            return JsonResponse({'message': 'Grocery updated successfully'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required
+@csrf_exempt
+def delete_grocery(request, id):
+    if request.method == 'DELETE' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        try:
+            grocery = get_object_or_404(UserGrocery, id=id)
+            grocery.delete()
+            return JsonResponse({'message': 'Grocery deleted successfully'})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=400)
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+# def track_expiration(request):
+#     days = int(request.GET.get('days', 7))  # Default to 7 days
+#     expiration_threshold = now().date() + timedelta(days=days)
+
+#     expiring_groceries = UserGrocery.objects.filter(user=request.user).filter(expiration_date__lte=expiration_threshold)
+
+#     grocery_list = [{
+#                 'id': item.id,
+#                 'name': item.grocery_name.capitalize(),
+#                 'category': item.grocery_category.category_name.capitalize(),
+#                 'quantity': item.quantity,
+#                 'unit': item.unit,
+#                 'expiration_date': item.expiration_date.strftime('%Y-%m-%d') if item.expiration_date else None
+#             } for item in expiring_groceries]
+#     return JsonResponse({'groceries': grocery_list})
 
 @login_required
 def generate_recipe(request):
@@ -326,3 +399,32 @@ def save_recipe_view(request):
             return JsonResponse({'error': 'Invalid JSON'}, status=400)
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+
+
+@login_required
+def get_recipes(request):
+    if request.method == 'GET':
+        recipes = Recipe.objects.filter(delete_flag=0, user=request.user)
+        recipe_list = [{
+            'id': recipe.recipe_id,
+            'name': recipe.recipe_title,
+            'ingredients': recipe.ingredients,
+            'steps': recipe.steps
+        } for recipe in recipes]
+        return JsonResponse({'recipes': recipe_list})
+    return JsonResponse({'error': 'Invalid request method. Only GET is allowed.'}, status=405)
+
+@login_required
+def delete_recipe(request, recipe_id):
+    if request.method == 'DELETE':
+        # Retrieve the recipe and ensure it belongs to the logged-in user
+        recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+
+        # Mark the recipe as deleted instead of deleting it
+        recipe.delete_flag = 1
+        recipe.save()
+
+        return JsonResponse({'message': 'Recipe marked as deleted.'}, status=200)
+
+    return JsonResponse({'error': 'Invalid request method.'}, status=400)
