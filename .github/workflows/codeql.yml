@@ -13,7 +13,7 @@ name: "CodeQL CI for for MealGenie Project"
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "femy_recipe" ]
   pull_request:
     branches: [ "main" ]
 
