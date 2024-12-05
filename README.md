@@ -38,6 +38,10 @@
 
     `python manage.py migrate`
 
-2. To start the application:
+2. Populate the grocery categories in the database:
+   
+    `python manage.py populate_categories`
+
+3. To start the application:
 
     `python manage.py runserver`
